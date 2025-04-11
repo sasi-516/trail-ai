@@ -5,11 +5,10 @@ from werkzeug.utils import secure_filename
 import time
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24).hex()  # Secure random key for production
+app.secret_key = os.urandom(24).hex()
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"exe", "csv"}
 
-# Ensure the upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -18,29 +17,28 @@ def allowed_file(filename):
 
 def run_executable(exe_path, csv_path):
     try:
-        print(f"Attempting to execute: {exe_path} {csv_path}")  # Debug
-        # Simulate loading
+        print(f"Attempting to execute: {exe_path} {csv_path}")
         time.sleep(1)
         result = subprocess.run([exe_path, csv_path], capture_output=True, text=True, check=True)
-        print(f"Execution output: {result.stdout}")  # Debug
+        print(f"Execution output: {result.stdout}")
         output_lines = result.stdout.strip().split('\n')
         table_data = []
         for line in output_lines:
             if line:
                 columns = line.split('\t')
-                if columns[0].startswith('F(X)'):  # Preserve section headers
+                if columns[0].startswith('F(X)'):
                     table_data.append([columns[0]] + columns[1:])
                 else:
-                    table_data.append(columns[1:])  # Remove Xn labels, keep data
+                    table_data.append(columns[1:])
         return table_data
     except subprocess.CalledProcessError as e:
-        print(f"Subprocess Error: {e.stderr}")  # Debug
+        print(f"Subprocess Error: {e.stderr}")
         return f"Error: {e.stderr}"
     except FileNotFoundError:
-        print(f"FileNotFoundError: {exe_path}")  # Debug
+        print(f"FileNotFoundError: {exe_path}")
         return f"Error: Executable {exe_path} not found."
     except Exception as e:
-        print(f"Unexpected Error: {str(e)}")  # Debug
+        print(f"Unexpected Error: {str(e)}")
         return f"Unexpected error: {str(e)}"
 
 @app.route("/", methods=["GET", "POST"])
@@ -65,7 +63,6 @@ def index():
                 exe_file.save(exe_path)
                 csv_file.save(csv_path)
 
-                # Make executable runnable (Linux permission)
                 os.chmod(exe_path, 0o755)
 
                 exe_output = run_executable(exe_path, csv_path)
@@ -74,12 +71,11 @@ def index():
                 else:
                     output = exe_output
 
-                # Clean up files after processing
                 try:
                     os.remove(exe_path)
                     os.remove(csv_path)
                 except OSError:
-                    pass  # Ignore cleanup errors
+                    pass
         loading = False
 
     return render_template("index.html", output=output, loading=loading)
