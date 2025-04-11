@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 uploads/*
+!uploads/dummy  # Negate the ignore for dummy
 venv/
 *.exe
 *.csv
