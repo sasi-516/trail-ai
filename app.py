@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import time
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # Change this to a secure key in production
+app.secret_key = os.urandom(24).hex()  # Secure random key for production
 UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"exe", "csv"}
 
@@ -18,24 +18,29 @@ def allowed_file(filename):
 
 def run_executable(exe_path, csv_path):
     try:
-        # Simulate loading for UI feedback
-        time.sleep(1)  # Adjust delay as needed
+        print(f"Attempting to execute: {exe_path} {csv_path}")  # Debug
+        # Simulate loading
+        time.sleep(1)
         result = subprocess.run([exe_path, csv_path], capture_output=True, text=True, check=True)
+        print(f"Execution output: {result.stdout}")  # Debug
         output_lines = result.stdout.strip().split('\n')
         table_data = []
         for line in output_lines:
             if line:
                 columns = line.split('\t')
                 if columns[0].startswith('F(X)'):  # Preserve section headers
-                    table_data.append([columns[0]] + columns[1:])  # Keep F(X)n and data
+                    table_data.append([columns[0]] + columns[1:])
                 else:
                     table_data.append(columns[1:])  # Remove Xn labels, keep data
         return table_data
     except subprocess.CalledProcessError as e:
+        print(f"Subprocess Error: {e.stderr}")  # Debug
         return f"Error: {e.stderr}"
     except FileNotFoundError:
+        print(f"FileNotFoundError: {exe_path}")  # Debug
         return f"Error: Executable {exe_path} not found."
     except Exception as e:
+        print(f"Unexpected Error: {str(e)}")  # Debug
         return f"Unexpected error: {str(e)}"
 
 @app.route("/", methods=["GET", "POST"])
@@ -60,6 +65,9 @@ def index():
                 exe_file.save(exe_path)
                 csv_file.save(csv_path)
 
+                # Make executable runnable (Linux permission)
+                os.chmod(exe_path, 0o755)
+
                 exe_output = run_executable(exe_path, csv_path)
                 if isinstance(exe_output, str):
                     flash(exe_output, "error")
@@ -67,11 +75,16 @@ def index():
                     output = exe_output
 
                 # Clean up files after processing
-                os.remove(exe_path)
-                os.remove(csv_path)
+                try:
+                    os.remove(exe_path)
+                    os.remove(csv_path)
+                except OSError:
+                    pass  # Ignore cleanup errors
         loading = False
 
     return render_template("index.html", output=output, loading=loading)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
