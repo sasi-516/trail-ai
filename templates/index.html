@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nambik Variables</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2333 0%, #2c3e50 50%, #34495e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #ecf0f1;
+            overflow-x: hidden;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            padding: 40px;
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+            animation: slideUp 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        h1 {
+            color: #3498db;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 700;
+        }
+        h1 span {
+            color: #e74c3c;
+            font-style: italic;
+        }
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .upload-form label {
+            color: #bdc3c7;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-align: left;
+        }
+        .upload-form input[type="file"] {
+            padding: 12px;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #ecf0f1;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .upload-form input[type="file"]:hover {
+            border-color: #e74c3c;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+        }
+        .upload-form button {
+            padding: 15px 30px;
+            background: linear-gradient(90deg, #3498db, #e74c3c);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .upload-form button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.5);
+        }
+        .output {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid #34495e; /* Simplified border */
+            text-align: left;
+            overflow-x: auto; /* Keep scrolling */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #34495e;
+            text-align: center;
+            color: #ecf0f1;
+            /* Removed effects: no transition, hover, or background changes */
+        }
+        .loading {
+            display: {{ 'block' if loading else 'none' }};
+            width: 40px;
+            height: 40px;
+            border: 4px solid #3498db;
+            border-top: 4px solid #e74c3c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .flash {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            animation: flashAnim 0.5s ease-out;
+        }
+        @keyframes flashAnim {
+            from { transform: scale(1.1); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .flash-error { background: #e74c3c; }
+        .flash-success { background: #2ecc71; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Nambik <span>Variables</span></h1>
+        <form method="POST" enctype="multipart/form-data" class="upload-form">
+            <label for="exe_file">Upload .exe File</label>
+            <input type="file" name="exe_file" accept=".exe" required>
+            <label for="csv_file">Upload .csv File</label>
+            <input type="file" name="csv_file" accept=".csv" required>
+            <button type="submit">Generate Output</button>
+        </form>
+        <div class="loading"></div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ 'flash-' + category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% if output %}
+            <div class="output">
+                <h3>Generated Output</h3>
+                <table>
+                    <tbody>
+                        {% for row in output %}
+                            <tr>
+                                {% for value in row %}
+                                    <td>{{ value }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
